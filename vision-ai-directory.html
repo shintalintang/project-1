@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VisionGroup · AI Workforce Directory</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:      #0085CA;
+      --navy:      #1D428A;
+      --grad:      linear-gradient(135deg, #0085CA 0%, #1D428A 100%);
+      --bg:        #F0F4FA;
+      --surface:   #FFFFFF;
+      --border:    #DDE4EF;
+      --text:      #1a2340;
+      --muted:     #7080a0;
+      --sidebar-w: 258px;
+      --header-h:  62px;
+      --footer-h:  56px;
+      --panel-w:   368px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Montserrat', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--header-h);
+      background: var(--grad);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: nowrap; gap: 0;
+      padding: 0 24px; z-index: 200;
+      box-shadow: 0 2px 18px rgba(29,66,138,0.28);
+    }
+
+    .logo-wrap {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; flex-shrink: 0;
+    }
+    .logo-img {
+      height: 28px; width: auto; max-width: 120px;
+      object-fit: contain; object-position: left center;
+      display: block;
+    }
+    .logo-div {
+      width: 1px; height: 22px;
+      background: rgba(255,255,255,0.35); flex-shrink: 0;
+    }
+    .logo-label {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.22em;
+      color: rgba(255,255,255,0.85); text-transform: uppercase; white-space: nowrap;
+    }
+
+    .search-wrap {
+      flex: 1; min-width: 0; max-width: 420px;
+      margin: 0 20px; position: relative;
+    }
+    .search-icon {
+      position: absolute; left: 13px; top: 50%;
+      transform: translateY(-50%); opacity: 0.7; pointer-events: none;
+    }
+    .search-input {
+      width: 100%; height: 36px; border-radius: 100px;
+      border: none; padding: 0 16px 0 38px;
+      font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 500;
+      background: rgba(255,255,255,0.18); color: #fff; outline: none;
+      transition: background 0.2s;
+    }
+    .search-input::placeholder { color: rgba(255,255,255,0.6); }
+    .search-input:focus { background: rgba(255,255,255,0.28); }
+
+    .stat-pill {
+      background: rgba(255,255,255,0.15); border-radius: 100px;
+      padding: 5px 14px; font-size: 11px; font-weight: 600;
+      color: #fff; letter-spacing: 0.04em; white-space: nowrap; flex-shrink: 0;
+    }
+    .stat-pill span { opacity: 0.72; font-weight: 400; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      position: fixed; top: var(--header-h); bottom: var(--footer-h); left: 0;
+      width: var(--sidebar-w);
+      background: var(--surface); border-right: 1px solid var(--border);
+      overflow-y: auto; padding: 16px 0;
+      scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+      z-index: 100;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .sidebar-heading {
+      display: block; padding: 0 16px 10px;
+      font-size: 9px; font-weight: 700; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--muted);
+    }
+
+    .ind-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 7px 16px; cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background 0.14s;
+    }
+    .ind-item:hover { background: #EEF3FB; }
+    .ind-item:hover .ind-name { color: var(--blue); }
+    .ind-item:hover .ind-icon { background: var(--grad); color: #fff; }
+    .ind-item.active { background: linear-gradient(90deg,#EEF3FB,#F7FAFF); border-left-color: var(--blue); }
+    .ind-item.active .ind-name { font-weight: 700; color: var(--navy); }
+    .ind-item.active .ind-icon { background: var(--grad); color: #fff; }
+    .ind-item.active .ind-count { background: rgba(0,133,202,0.12); color: var(--blue); }
+
+    .ind-icon {
+      width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: #EEF3FB; color: var(--blue);
+      transition: background 0.14s;
+    }
+    .ind-icon svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .ind-name { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; }
+    .ind-count {
+      background: var(--bg); border-radius: 100px;
+      padding: 2px 7px; font-size: 10px; font-weight: 600; color: var(--muted);
+    }
+    .ind-div { height: 1px; background: var(--border); margin: 5px 0; }
+
+    /* ── MAIN ── */
+    .main {
+      margin-left: var(--sidebar-w);
+      padding-top: var(--header-h);
+      padding-bottom: var(--footer-h);
+      min-height: 100vh;
+      transition: margin-right 0.33s ease;
+    }
+    .main.panel-open { margin-right: var(--panel-w); }
+
+    .main-inner { padding: 24px; }
+
+    .content-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 18px; flex-wrap: wrap; gap: 8px;
+    }
+    .content-title { font-size: 18px; font-weight: 800; color: var(--navy); }
+    .content-sub { font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 3px; }
+    .result-count { font-size: 12px; color: var(--muted); font-weight: 500; }
+
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .filter-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--navy); color: #fff;
+      border-radius: 100px; padding: 5px 12px;
+      font-size: 11px; font-weight: 600;
+    }
+    .filter-pill button {
+      background: none; border: none; color: rgba(255,255,255,0.7);
+      font-size: 16px; line-height: 1; padding: 0; cursor: pointer;
+    }
+    .filter-pill button:hover { color: #fff; }
+
+    /* ── GRID ── */
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 15px;
+    }
+
+    /* ── CARD ── */
+    .agent-card {
+      background: var(--surface); border-radius: 14px;
+      border: 1.5px solid var(--border); overflow: hidden;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .agent-card:hover {
+      box-shadow: 0 8px 28px rgba(29,66,138,0.13);
+      transform: translateY(-2px);
+    }
+    .agent-card.selected {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2.5px rgba(0,133,202,0.22), 0 8px 28px rgba(29,66,138,0.14);
+    }
+
+    .card-photo-wrap {
+      position: relative; width: 100%; height: 155px; overflow: hidden;
+      background: linear-gradient(135deg,#dde8f5,#eef3fb);
+    }
+    .card-photo { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+    .card-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(29,66,138,0.55) 0%, transparent 55%);
+    }
+    .card-badge {
+      position: absolute; bottom: 9px; left: 9px;
+      background: rgba(255,255,255,0.18); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.3); border-radius: 100px;
+      padding: 3px 9px; font-size: 8px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase; color: #fff;
+    }
+
+    .card-body { padding: 13px 14px 14px; }
+    .card-name { font-size: 14px; font-weight: 800; color: var(--text); line-height: 1.2; }
+    .card-role { font-size: 11px; font-weight: 500; color: var(--muted); margin-top: 3px; margin-bottom: 11px; }
+
+    .card-actions { display: flex; align-items: center; gap: 6px; }
+    .icon-btn {
+      width: 30px; height: 30px; border-radius: 50%;
+      border: 1.5px solid var(--border); background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); cursor: pointer; flex-shrink: 0;
+      transition: all 0.14s;
+    }
+    .icon-btn:hover { border-color: var(--blue); color: var(--blue); background: #EEF3FB; }
+    .icon-btn svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+    .btn-preview {
+      flex: 1; height: 30px; border-radius: 100px;
+      background: var(--grad); color: #fff; border: none;
+      font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.06em; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      transition: opacity 0.18s;
+    }
+    .btn-preview:hover { opacity: 0.88; }
+    .btn-preview svg { width: 11px; height: 11px; fill: none; stroke: #fff; stroke-width: 2.5; stroke-linecap: round; }
+
+    /* ── EMPTY ── */
+    .empty-state { display: none; flex-direction: column; align-items: center; padding: 60px 20px; text-align: center; }
+    .empty-state.visible { display: flex; }
+    .empty-icon { width: 56px; height: 56px; border-radius: 14px; background: #EEF3FB; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; color: var(--blue); }
+    .empty-title { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+    .empty-sub { font-size: 12px; color: var(--muted); }
+
+    /* ── CALL PANEL ── */
+    .call-panel {
+      position: fixed; top: var(--header-h); right: 0; bottom: var(--footer-h);
+      width: var(--panel-w);
+      background: var(--surface); border-left: 1px solid var(--border);
+      transform: translateX(100%);
+      transition: transform 0.33s cubic-bezier(0.4,0,0.2,1);
+      z-index: 100; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .call-panel.open { transform: translateX(0); }
+
+    .panel-top {
+      background: var(--grad); flex-shrink: 0; position: relative;
+    }
+    .panel-close {
+      position: absolute; top: 11px; right: 13px;
+      width: 26px; height: 26px; border-radius: 50%;
+      background: rgba(255,255,255,0.2); border: none;
+      color: #fff; font-size: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; z-index: 2;
+    }
+    .panel-close:hover { background: rgba(255,255,255,0.35); }
+
+    .panel-scene-wrap { width: 100%; height: 108px; overflow: hidden; position: relative; }
+    .panel-scene { width: 100%; height: 100%; object-fit: cover; object-position: center; opacity: 0.65; display: block; }
+    .panel-icon-ring {
+      position: absolute; bottom: -26px; left: 18px;
+      width: 54px; height: 54px; border-radius: 50%;
+      border: 3px solid #fff;
+      background: var(--grad);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(29,66,138,0.3);
+    }
+    .panel-icon-ring svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .panel-body { flex: 1; overflow-y: auto; padding: 38px 18px 22px; }
+
+    .panel-tag {
+      display: inline-block; background: rgba(0,133,202,0.1); color: var(--blue);
+      border-radius: 100px; padding: 3px 11px;
+      font-size: 9px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; margin-bottom: 8px;
+    }
+    .panel-name { font-size: 19px; font-weight: 800; color: var(--navy); margin-bottom: 3px; }
+    .panel-role { font-size: 11px; color: var(--muted); font-weight: 500; margin-bottom: 16px; }
+    .panel-sec {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 7px;
+    }
+    .panel-desc { font-size: 12px; line-height: 1.75; color: #4a5a78; margin-bottom: 16px; }
+    .panel-caps { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+    .cap-tag {
+      background: #EEF3FB; color: var(--navy);
+      border-radius: 100px; padding: 4px 10px;
+      font-size: 10px; font-weight: 600;
+    }
+
+    .status-box {
+      background: var(--bg); border-radius: 11px;
+      padding: 13px; margin-bottom: 13px;
+      display: flex; align-items: center; gap: 11px;
+    }
+    .status-ring {
+      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(0,133,202,0.1);
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .status-ring::after {
+      content: ''; position: absolute; inset: -4px; border-radius: 50%;
+      border: 2px solid rgba(0,133,202,0.25);
+      animation: ripple 2.2s ease-out infinite;
+    }
+    @keyframes ripple { 0%{inset:-4px;opacity:1} 100%{inset:-14px;opacity:0} }
+    .status-ring svg { width: 16px; height: 16px; fill: none; stroke: var(--blue); stroke-width: 2; stroke-linecap: round; }
+    .status-label { font-size: 11px; font-weight: 700; color: var(--navy); }
+    .status-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .dot-pulse {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: #f59e0b; margin-right: 5px;
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    .btn-call-now {
+      width: 100%; height: 44px; border-radius: 100px;
+      background: var(--grad); color: #fff; border: none;
+      font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700;
+      letter-spacing: 0.06em; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 14px rgba(0,133,202,0.32); margin-bottom: 8px;
+      transition: opacity 0.18s;
+    }
+    .btn-call-now:hover { opacity: 0.9; }
+    .btn-call-now svg { width: 14px; height: 14px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; }
+
+    .btn-schedule {
+      width: 100%; height: 38px; border-radius: 100px;
+      background: none; color: var(--navy);
+      border: 1.5px solid var(--border);
+      font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .btn-schedule:hover { border-color: var(--blue); background: #EEF3FB; }
+    .btn-schedule svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+    /* ── FOOTER ── */
+    .site-footer {
+      position: fixed; bottom: 0; left: var(--sidebar-w); right: 0;
+      height: var(--footer-h);
+      background: var(--surface); border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; flex-wrap: wrap; gap: 8px;
+      z-index: 100;
+      transition: right 0.33s ease;
+    }
+    .site-footer.panel-open { right: var(--panel-w); }
+    .footer-copy { font-size: 11px; color: var(--muted); font-weight: 400; }
+    .footer-copy a { color: var(--blue); font-weight: 600; text-decoration: none; }
+    .footer-copy a:hover { text-decoration: underline; }
+    .footer-link { font-size: 11px; font-weight: 600; color: var(--muted); text-decoration: none; }
+    .footer-link:hover { color: var(--blue); }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <a class="logo-wrap" href="https://visiongroup.co/" target="_blank">
+    <img class="logo-img" src="https://visiontech.activehosted.com/content/B983BG/2025/02/04/77f4f511-130e-4deb-9b04-493c849d694b.png" alt="VisionGroup" />
+    <div class="logo-div"></div>
+    <span class="logo-label">AI Workforce</span>
+  </a>
+  <div class="search-wrap">
+    <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input class="search-input" type="text" placeholder="Search AI agents, roles, industries…" id="searchInput" oninput="handleSearch()" />
+  </div>
+  <div class="stat-pill"><span>Showing </span><span id="statCount">32</span><span> agents</span></div>
+</header>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <span class="sidebar-heading">Industries</span>
+
+  <div class="ind-item active" onclick="filterInd('all',this)" data-ind="all">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></div>
+    <span class="ind-name">All Industries</span><span class="ind-count">32</span>
+  </div>
+  <div class="ind-div"></div>
+
+  <div class="ind-item" onclick="filterInd('Automotive',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><path d="M5 17H3v-5l2-5h14l2 5v5h-2"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/><path d="M5 12h14"/></svg></div>
+    <span class="ind-name">Automotive</span><span class="ind-count">2</span>
+  </div>
+  <div class="ind-item" onclick="filterInd('Aesthetic',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><path d="M12 2a9.96 9.96 0 0 1 3.85 3.85A9.96 9.96 0 0 1 19.7 12a9.96 9.96 0 0 1-3.85 3.85A9.96 9.96 0 0 1 12 19.7a9.96 9.96 0 0 1-3.85-3.85A9.96 9.96 0 0 1 4.3 12a9.96 9.96 0 0 1 3.85-3.85A9.96 9.96 0 0 1 12 4.3z"/><circle cx="12" cy="12" r="3"/></svg></div>
+    <span class="ind-name">Aesthetic</span><span class="ind-count">2</span>
+  </div>
+  <div class="ind-item" onclick="filterInd('Human Resource',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><path d="M17 11a3 3 0 0 0 0 6M22 21v-1a4 4 0 0 0-3-3.87"/></svg></div>
+    <span class="ind-name">Human Resource</span><span class="ind-count">2</span>
+  </div>
+  <div class="ind-item" onclick="filterInd('Retail Ecommerce',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+    <span class="ind-name">Retail Ecommerce</span><span class="ind-count">2</span>
+  </div>
+  <div class="ind-item" onclick="filterInd('Interior Design',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <span class="ind-name">Interior Design</span><span class="ind-count">2</span>
+  </div>
+  <div class="ind-item" onclick="filterInd('Education',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+    <span class="ind-name">Education</span><span class="ind-count">2</span>
+  </div>
+  <div class="ind-item" onclick="filterInd('Technology',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="2" x2="9" y2="4"/><line x1="15" y1="2" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="22"/><line x1="15" y1="20" x2="15" y2="22"/><line x1="2" y1="9" x2="4" y2="9"/><line x1="2" y1="15" x2="4" y2="15"/><line x1="20" y1="9" x2="22" y2="9"/><line x1="20" y1="15" x2="22" y2="15"/></svg></div>
+    <span class="ind-name">Technology</span><span class="ind-count">2</span>
+  </div>
+  <div class="ind-item" onclick="filterInd('Facility Management (Education)',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg></div>
+    <span class="ind-name">Facility Mgmt (Edu)</span><span class="ind-count">2</span>
+  </div>
+  <div class="ind-item" onclick="filterInd('Facility Management (Villa)',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3 7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><rect x="9" y="14" width="6" height="7"/></svg></div>
+    <span class="ind-name">Facility Mgmt (Villa)</span><span class="ind-count">2</span>
+  </div>
+  <div class="ind-item" onclick="filterInd('Finance',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+    <span class="ind-name">Finance</span><span class="ind-count">2</span>
+  </div>
+  <div class="ind-item" onclick="filterInd('Manufacturing',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></div>
+    <span class="ind-name">Manufacturing</span><span class="ind-count">2</span>
+  </div>
+  <div class="ind-item" onclick="filterInd('Education (Training)',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+    <span class="ind-name">Education (Training)</span><span class="ind-count">2</span>
+  </div>
+  <div class="ind-item" onclick="filterInd('Dental',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><path d="M12 2C9.5 2 7 4 7 6.5c0 1.5.5 3 1 4.5S9 14 9 16c0 2 1 4 3 4s3-2 3-4c0-2-.5-4-1-5.5S17 8 17 6.5C17 4 14.5 2 12 2z"/></svg></div>
+    <span class="ind-name">Dental</span><span class="ind-count">2</span>
+  </div>
+  <div class="ind-item" onclick="filterInd('Restaurant',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>
+    <span class="ind-name">Restaurant</span><span class="ind-count">2</span>
+  </div>
+  <div class="ind-item" onclick="filterInd('Education (Instructor)',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+    <span class="ind-name">Education (Instructor)</span><span class="ind-count">2</span>
+  </div>
+  <div class="ind-item" onclick="filterInd('Insurance',this)">
+    <div class="ind-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+    <span class="ind-name">Insurance</span><span class="ind-count">2</span>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main" id="mainWrap">
+  <div class="main-inner">
+    <div class="content-bar">
+      <div>
+        <div class="content-title" id="contentTitle">All Industries</div>
+        <div class="content-sub">VisionGroup AI Workforce — click Call Preview on any agent to begin</div>
+      </div>
+      <div class="result-count" id="resultCount">Showing 32 agents</div>
+    </div>
+
+    <div class="filter-bar" id="filterBar" style="display:none">
+      <div class="filter-pill">
+        <span id="pillText"></span>
+        <button onclick="filterInd('all',document.querySelector('[data-ind=all]'))">×</button>
+      </div>
+    </div>
+
+    <div class="agent-grid" id="agentGrid"></div>
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <div class="empty-title">No agents found</div>
+      <div class="empty-sub">Try a different search or industry filter</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CALL PANEL ── -->
+<div class="call-panel" id="callPanel">
+  <div class="panel-top">
+    <button class="panel-close" onclick="closePanel()">✕</button>
+    <div class="panel-scene-wrap">
+      <img class="panel-scene" id="panelScene" src="" alt="" />
+      <div class="panel-icon-ring" id="panelRing"></div>
+    </div>
+  </div>
+  <div class="panel-body">
+    <div class="panel-tag" id="panelTag"></div>
+    <div class="panel-name" id="panelName"></div>
+    <div class="panel-role" id="panelRole"></div>
+    <div class="panel-sec">About</div>
+    <p class="panel-desc" id="panelDesc"></p>
+    <div class="panel-sec">Capabilities</div>
+    <div class="panel-caps" id="panelCaps"></div>
+    <div class="status-box">
+      <div class="status-ring">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8a19.79 19.79 0 01-3.07-8.68A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+      </div>
+      <div>
+        <div class="status-label"><span class="dot-pulse"></span>Awaiting Connection</div>
+        <div class="status-sub">Mic authorization required to start</div>
+      </div>
+    </div>
+    <button class="btn-call-now" onclick="startCall()">
+      <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8a19.79 19.79 0 01-3.07-8.68A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+      Start Call Preview
+    </button>
+    <button class="btn-schedule">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Schedule a Demo
+    </button>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer class="site-footer" id="siteFooter">
+  <span class="footer-copy">
+    Copyright &copy; 2026 <a href="https://visiongroup.co/" target="_blank">Vision Group</a>. All rights reserved.
+  </span>
+  <a class="footer-link" href="https://visiongroup.co/privacypolicy/" target="_blank">Privacy &amp; Policy</a>
+</footer>
+
+<script>
+const IND_ICONS = {
+  "Automotive":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3v-5l2-5h14l2 5v5h-2"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/><path d="M5 12h14"/></svg>`,
+  "Aesthetic":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a9.96 9.96 0 0 1 3.85 3.85A9.96 9.96 0 0 1 19.7 12a9.96 9.96 0 0 1-3.85 3.85A9.96 9.96 0 0 1 12 19.7a9.96 9.96 0 0 1-3.85-3.85A9.96 9.96 0 0 1 4.3 12a9.96 9.96 0 0 1 3.85-3.85A9.96 9.96 0 0 1 12 4.3z"/><circle cx="12" cy="12" r="3"/></svg>`,
+  "Human Resource":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><path d="M17 11a3 3 0 0 0 0 6M22 21v-1a4 4 0 0 0-3-3.87"/></svg>`,
+  "Retail Ecommerce":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`,
+  "Interior Design":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+  "Education":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+  "Technology":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="2" x2="9" y2="4"/><line x1="15" y1="2" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="22"/><line x1="15" y1="20" x2="15" y2="22"/><line x1="2" y1="9" x2="4" y2="9"/><line x1="2" y1="15" x2="4" y2="15"/><line x1="20" y1="9" x2="22" y2="9"/><line x1="20" y1="15" x2="22" y2="15"/></svg>`,
+  "Facility Management (Education)":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>`,
+  "Facility Management (Villa)":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3 7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><rect x="9" y="14" width="6" height="7"/></svg>`,
+  "Finance":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
+  "Manufacturing":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>`,
+  "Education (Training)":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+  "Dental":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C9.5 2 7 4 7 6.5c0 1.5.5 3 1 4.5S9 14 9 16c0 2 1 4 3 4s3-2 3-4c0-2-.5-4-1-5.5S17 8 17 6.5C17 4 14.5 2 12 2z"/></svg>`,
+  "Restaurant":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>`,
+  "Education (Instructor)":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`,
+  "Insurance":`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>`
+};
+
+const AGENTS = [
+  {id:1,name:"Alex Rivera",role:"Sales Consultant AI",industry:"Automotive",photo:"https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=600&q=80",desc:"Handles car enquiries, test drive bookings, and financing options. Guides buyers from discovery to purchase decision with real-time inventory access.",caps:["Lead Qualification","Test Drive Booking","Finance Calculator","Inventory Lookup","Trade-in Assessment"]},
+  {id:2,name:"Dana Summers",role:"Service Advisor AI",industry:"Automotive",photo:"https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&q=80",desc:"Manages service appointments, explains repair estimates, and keeps customers updated on vehicle status throughout the service process.",caps:["Appointment Scheduling","Repair Estimates","Job Status Updates","Parts Availability"]},
+  {id:3,name:"Luna Okafor",role:"Beauty Consultant AI",industry:"Aesthetic",photo:"https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=600&q=80",desc:"Provides skincare advice, recommends treatments, and books consultations. Personalizes recommendations based on skin type and client goals.",caps:["Skin Analysis Q&A","Treatment Recommendations","Appointment Booking","Product Pairing"]},
+  {id:4,name:"Kai Chen",role:"Clinic Receptionist AI",industry:"Aesthetic",photo:"https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&q=80",desc:"Manages front-desk communications for aesthetic clinics — bookings, post-treatment follow-ups, and client intake forms.",caps:["Booking Management","Follow-up Scheduling","Intake Forms","FAQ Handling"]},
+  {id:5,name:"Maya Patel",role:"HR Screening AI",industry:"Human Resource",photo:"https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&q=80",desc:"Conducts structured first-round interviews, scores candidates on culture fit and role requirements, and delivers instant reports to hiring managers.",caps:["Candidate Screening","Structured Interviews","Culture Fit Scoring","ATS Integration","Interview Reports"]},
+  {id:6,name:"James Obi",role:"Onboarding Specialist AI",industry:"Human Resource",photo:"https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=600&q=80",desc:"Guides new hires through the entire onboarding journey — documents, policies, introductions, and first-week schedules.",caps:["Document Collection","Policy Q&A","Task Checklists","Benefits Explanation","Calendar Setup"]},
+  {id:7,name:"Aria Tan",role:"Shopping Assistant AI",industry:"Retail Ecommerce",photo:"https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&q=80",desc:"Drives conversions through personalized product recommendations, cart recovery messages, and real-time order tracking support.",caps:["Product Recommendations","Cart Recovery","Order Tracking","Returns & Refunds","Upselling"]},
+  {id:8,name:"Ethan Brooks",role:"Customer Success AI",industry:"Retail Ecommerce",photo:"https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&q=80",desc:"Handles post-purchase queries, resolves complaints, and builds customer loyalty through proactive outreach and satisfaction checks.",caps:["Post-Purchase Support","Complaint Resolution","Loyalty Programs","Review Requests"]},
+  {id:9,name:"Deco Williams",role:"Design Advisor AI",industry:"Interior Design",photo:"https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&q=80",desc:"Helps clients visualize spaces, recommends styles and materials, and books consultations with senior designers based on project scope.",caps:["Style Consultation","Material Recommendations","Mood Board Briefing","Project Scoping"]},
+  {id:10,name:"Suri Kim",role:"Project Coordinator AI",industry:"Interior Design",photo:"https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=80",desc:"Coordinates timelines, supplier updates, and client approvals throughout the interior design project lifecycle.",caps:["Timeline Tracking","Supplier Comms","Client Approval Flows","Change Order Management"]},
+  {id:11,name:"Prof. Eli Nash",role:"Academic Assistant AI",industry:"Education",photo:"https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=600&q=80",desc:"Assists students with course selection, academic FAQs, and study planning. Available 24/7 to reduce admin load on teaching staff.",caps:["Course Guidance","FAQ Handling","Study Planning","Assignment Reminders"]},
+  {id:12,name:"Hana Rossi",role:"Admissions AI",industry:"Education",photo:"https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&q=80",desc:"Guides prospective students through the admissions process, answers eligibility questions, and schedules campus visits.",caps:["Eligibility Q&A","Application Guidance","Campus Visit Booking","Scholarship Info"]},
+  {id:13,name:"Nova Singh",role:"Tech Support AI",industry:"Technology",photo:"https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80",desc:"Resolves L1/L2 technical issues, escalates complex cases to engineers, and maintains a knowledge base of common solutions.",caps:["L1/L2 Support","Ticket Triage","Knowledge Base","Bug Escalation","SLA Monitoring"]},
+  {id:14,name:"Dex Moore",role:"Pre-Sales Engineer AI",industry:"Technology",photo:"https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&q=80",desc:"Handles technical discovery calls, demos product capabilities, and prepares custom solution summaries for enterprise prospects.",caps:["Technical Discovery","Product Demo Support","POC Planning","RFP Responses"]},
+  {id:15,name:"Campus AI",role:"Facility Coordinator",industry:"Facility Management (Education)",photo:"https://images.unsplash.com/photo-1562774053-701939374585?w=600&q=80",desc:"Manages maintenance requests, room bookings, and vendor scheduling across educational campuses to ensure smooth daily operations.",caps:["Room Booking","Maintenance Triage","Vendor Scheduling","Compliance Tracking"]},
+  {id:16,name:"Val Osman",role:"Grounds & Safety AI",industry:"Facility Management (Education)",photo:"https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&q=80",desc:"Monitors safety incidents, coordinates security patrols, and manages emergency response communications across school facilities.",caps:["Incident Reporting","Safety Audits","Emergency Alerts","Security Coordination"]},
+  {id:17,name:"Villa AI",role:"Property Manager AI",industry:"Facility Management (Villa)",photo:"https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=600&q=80",desc:"Handles villa guest requests, housekeeping schedules, and maintenance coordination to deliver 5-star residential experiences.",caps:["Guest Requests","Housekeeping Scheduling","Maintenance Coordination","Concierge Support"]},
+  {id:18,name:"Rex Bautista",role:"Leasing Assistant AI",industry:"Facility Management (Villa)",photo:"https://images.unsplash.com/photo-1613977257363-707ba9348227?w=600&q=80",desc:"Qualifies prospective villa tenants, manages lease enquiries, and schedules viewings with property managers.",caps:["Tenant Qualification","Lease Q&A","Viewing Scheduling","Rental Rate Info"]},
+  {id:19,name:"Felix Grant",role:"Financial Advisor AI",industry:"Finance",photo:"https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&q=80",desc:"Provides compliant financial guidance, explains investment products, and assists with account queries in a regulated environment.",caps:["Product Explanation","KYC Support","Portfolio Q&A","Loan Eligibility","Compliance Checks"]},
+  {id:20,name:"Nadia Cruz",role:"Insurance Liaison AI",industry:"Finance",photo:"https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&q=80",desc:"Handles claims intake, policy enquiries, and renewal reminders — reducing agent workload while improving policyholder satisfaction.",caps:["Claims Intake","Policy Queries","Renewal Alerts","Premium Calculation"]},
+  {id:21,name:"Manu AI",role:"Production Line AI",industry:"Manufacturing",photo:"https://images.unsplash.com/photo-1565793979627-1d6a09c7ca86?w=600&q=80",desc:"Monitors production KPIs, flags anomalies, and assists engineers with maintenance scheduling and compliance reporting.",caps:["OEE Monitoring","Predictive Maintenance","Compliance Reporting","Anomaly Detection"]},
+  {id:22,name:"Sara Lindqvist",role:"Supply Chain AI",industry:"Manufacturing",photo:"https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=600&q=80",desc:"Tracks supplier lead times, manages purchase orders, and alerts procurement teams to potential supply disruptions.",caps:["Supplier Tracking","PO Management","Disruption Alerts","Inventory Sync"]},
+  {id:23,name:"Coach Riley",role:"Corporate Trainer AI",industry:"Education (Training)",photo:"https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=600&q=80",desc:"Delivers interactive training modules, tracks learner progress, and provides personalized coaching nudges based on performance data.",caps:["Interactive Modules","Progress Tracking","Coaching Nudges","Skills Gap Analysis"]},
+  {id:24,name:"Priya Menon",role:"L&D Coordinator AI",industry:"Education (Training)",photo:"https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&q=80",desc:"Schedules learning programs, manages trainer availability, and generates completion reports for HR and compliance teams.",caps:["Program Scheduling","Trainer Coordination","Completion Reports","LMS Integration"]},
+  {id:25,name:"Dr. Smile AI",role:"Dental Receptionist AI",industry:"Dental",photo:"https://images.unsplash.com/photo-1606811971618-4486d14f3f99?w=600&q=80",desc:"Manages appointment bookings, sends reminders, handles patient FAQs, and reduces no-show rates through proactive follow-ups.",caps:["Appointment Booking","Reminder Calls","Patient FAQ","No-show Prevention"]},
+  {id:26,name:"Lena Park",role:"Treatment Coordinator AI",industry:"Dental",photo:"https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=600&q=80",desc:"Explains treatment plans, provides cost breakdowns, and helps patients understand their options before consulting with the dentist.",caps:["Treatment Plans","Cost Breakdown","Patient Education","Post-Treatment Follow-up"]},
+  {id:27,name:"Host AI",role:"Restaurant Host AI",industry:"Restaurant",photo:"https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80",desc:"Handles table reservations, answers menu queries, manages dietary enquiries, and upsells specials to boost per-cover revenue.",caps:["Table Reservations","Menu Guidance","Dietary Enquiries","Upselling","Event Booking"]},
+  {id:28,name:"Mira Santos",role:"Delivery Operations AI",industry:"Restaurant",photo:"https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80",desc:"Coordinates delivery orders, manages rider dispatch updates, and handles customer queries about delivery status in real time.",caps:["Order Coordination","Rider Dispatch","Delivery Tracking","Platform Integration"]},
+  {id:29,name:"Sage AI",role:"Virtual Instructor AI",industry:"Education (Instructor)",photo:"https://images.unsplash.com/photo-1509062522246-3755977927d7?w=600&q=80",desc:"Delivers live and async instruction across subjects, adapts difficulty to learner level, and provides instant feedback on exercises.",caps:["Live Instruction","Async Lessons","Adaptive Difficulty","Instant Feedback"]},
+  {id:30,name:"Eli Johansson",role:"Language Tutor AI",industry:"Education (Instructor)",photo:"https://images.unsplash.com/photo-1510531704581-5b2870972060?w=600&q=80",desc:"Provides conversational language coaching in English, Malay, and Mandarin. Tailors lessons to learner fluency level and goals.",caps:["Conversational Practice","Grammar Correction","Vocabulary Building","Multilingual"]},
+  {id:31,name:"Shield AI",role:"Claims Handler AI",industry:"Insurance",photo:"https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=600&q=80",desc:"Processes insurance claims end-to-end — intake, document verification, status updates, and settlement coordination with adjusters.",caps:["Claims Intake","Document Verification","Status Updates","Fraud Flagging"]},
+  {id:32,name:"Zoe Hartman",role:"Policy Sales AI",industry:"Insurance",photo:"https://images.unsplash.com/photo-1531973576160-7125cd663d86?w=600&q=80",desc:"Qualifies prospects, explains policy options, generates tailored quotes, and guides customers from enquiry to policy activation.",caps:["Lead Qualification","Policy Explanation","Quote Generation","Needs Assessment"]}
+];
+
+let currentFilter='all', currentSearch='', selectedAgent=null;
+
+function renderCards(){
+  const grid=document.getElementById('agentGrid'), empty=document.getElementById('emptyState');
+  let list=AGENTS;
+  if(currentFilter!=='all') list=list.filter(a=>a.industry===currentFilter);
+  if(currentSearch){const q=currentSearch.toLowerCase();list=list.filter(a=>a.name.toLowerCase().includes(q)||a.role.toLowerCase().includes(q)||a.industry.toLowerCase().includes(q));}
+  document.getElementById('statCount').textContent=list.length;
+  document.getElementById('resultCount').textContent='Showing '+list.length+' agent'+(list.length!==1?'s':'');
+  if(!list.length){grid.innerHTML='';empty.classList.add('visible');return;}
+  empty.classList.remove('visible');
+  grid.innerHTML=list.map(a=>`
+    <div class="agent-card${selectedAgent&&selectedAgent.id===a.id?' selected':''}" id="card-${a.id}">
+      <div class="card-photo-wrap">
+        <img class="card-photo" src="${a.photo}" alt="${a.industry}" loading="lazy"/>
+        <div class="card-overlay"></div>
+        <div class="card-badge">${a.industry}</div>
+      </div>
+      <div class="card-body">
+        <div class="card-name">${a.name}</div>
+        <div class="card-role">${a.role}</div>
+        <div class="card-actions">
+          <button class="icon-btn" title="Email"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg></button>
+          <button class="icon-btn" title="Phone"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8a19.79 19.79 0 01-3.07-8.68A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg></button>
+          <button class="btn-preview" onclick="openPanel(${a.id})"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8a19.79 19.79 0 01-3.07-8.68A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>Call Preview</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function filterInd(ind,el){
+  currentFilter=ind;
+  document.querySelectorAll('.ind-item').forEach(i=>i.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.getElementById('contentTitle').textContent=ind==='all'?'All Industries':ind;
+  const bar=document.getElementById('filterBar');
+  if(ind==='all'){bar.style.display='none';}else{bar.style.display='flex';document.getElementById('pillText').textContent=ind;}
+  closePanel(); renderCards();
+}
+
+function handleSearch(){currentSearch=document.getElementById('searchInput').value.trim();renderCards();}
+
+function openPanel(id){
+  const a=AGENTS.find(x=>x.id===id);if(!a)return;
+  selectedAgent=a;
+  document.getElementById('panelScene').src=a.photo;
+  document.getElementById('panelTag').textContent=a.industry;
+  document.getElementById('panelName').textContent=a.name;
+  document.getElementById('panelRole').textContent=a.role;
+  document.getElementById('panelDesc').textContent=a.desc;
+  document.getElementById('panelRing').innerHTML=IND_ICONS[a.industry]||'';
+  document.getElementById('panelCaps').innerHTML=a.caps.map(c=>`<span class="cap-tag">${c}</span>`).join('');
+  document.getElementById('callPanel').classList.add('open');
+  document.getElementById('mainWrap').classList.add('panel-open');
+  document.getElementById('siteFooter').classList.add('panel-open');
+  document.querySelectorAll('.agent-card').forEach(c=>c.classList.remove('selected'));
+  const card=document.getElementById('card-'+id);
+  if(card){card.classList.add('selected');card.scrollIntoView({behavior:'smooth',block:'nearest'});}
+}
+
+function closePanel(){
+  selectedAgent=null;
+  document.getElementById('callPanel').classList.remove('open');
+  document.getElementById('mainWrap').classList.remove('panel-open');
+  document.getElementById('siteFooter').classList.remove('panel-open');
+  document.querySelectorAll('.agent-card').forEach(c=>c.classList.remove('selected'));
+}
+
+function startCall(){if(selectedAgent)alert('Connecting to '+selectedAgent.name+'…\n\nThis would initiate the voice call preview in your live environment.');}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
+renderCards();
+</script>
+</body>
+</html>
